@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Un date ? 🎮</title>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f1a;
+      --card: #1a1a2e;
+      --card2: #16213e;
+      --accent: #e94560;
+      --gold: #f5a623;
+      --text: #eaeaea;
+      --muted: #8899aa;
+      --border: rgba(233,69,96,0.3);
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── LANG TOGGLE ── */
+    .lang-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 200;
+      display: flex;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      overflow: hidden;
+    }
+    .lang-btn {
+      padding: 0.4rem 1rem;
+      font-family: 'Boogaloo', cursive;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+    }
+    .lang-btn.active { background: var(--accent); color: #fff; }
+
+    [data-lang] { display: none; }
+    .lang-fr [data-lang="fr"],
+    .lang-fr span[data-lang="fr"] { display: block; }
+    .lang-en [data-lang="en"],
+    .lang-en span[data-lang="en"] { display: block; }
+    span[data-lang] { display: none !important; }
+    .lang-fr span[data-lang="fr"] { display: inline !important; }
+    .lang-en span[data-lang="en"] { display: inline !important; }
+
+    /* ── PAGES ── */
+    .page { display: none; min-height: 100vh; }
+    .page.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+    /* ── ASK PAGE ── */
+    #page-ask {
+      text-align: center;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(233,69,96,0.18) 0%, transparent 65%),
+                  radial-gradient(ellipse at 80% 80%, rgba(15,52,96,0.35) 0%, transparent 60%);
+    }
+
+    .ask-tag {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Boogaloo', cursive;
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      padding: 0.3rem 1rem;
+      border-radius: 2rem;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+    }
+
+    #page-ask h1 {
+      font-family: 'Boogaloo', cursive;
+      font-size: clamp(2.5rem, 8vw, 5.5rem);
+      line-height: 1.1;
+      color: #fff;
+      text-shadow: 0 0 40px rgba(233,69,96,0.4);
+      margin-bottom: 0.5rem;
+    }
+
+    #page-ask h1 span { color: var(--accent); }
+
+    .ask-sub {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      position: relative;
+      min-height: 80px;
+    }
+
+    .btn-yes {
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Boogaloo', cursive;
+      font-size: 1.5rem;
+      letter-spacing: 0.05em;
+      padding: 0.9rem 2.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      box-shadow: 0 0 24px rgba(233,69,96,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+      z-index: 1;
+    }
+    .btn-yes:hover { transform: translateY(-3px); box-shadow: 0 6px 32px rgba(233,69,96,0.6); }
+
+    .btn-no {
+      background: var(--card2);
+      color: var(--muted);
+      font-family: 'Boogaloo', cursive;
+      font-size: 1.5rem;
+      letter-spacing: 0.05em;
+      padding: 0.9rem 2.5rem;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: font-size 0.2s;
+      position: relative;
+      user-select: none;
+    }
+
+    /* Heart trail */
+    .heart {
+      position: fixed;
+      pointer-events: none;
+      font-size: 1.4rem;
+      animation: floatUp 1s ease-out forwards;
+      z-index: 999;
+    }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-80px) scale(1.4); }
+    }
+
+    /* ── FORM PAGE ── */
+    #page-form {
+      padding: 4rem 1.5rem;
+      background: radial-gradient(ellipse at 50% 0%, rgba(233,69,96,0.12) 0%, transparent 60%);
+    }
+
+    #page-form .inner {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .section-label {
+      font-family: 'Boogaloo', cursive;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    #page-form h2 {
+      font-family: 'Boogaloo', cursive;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    #page-form .sub {
+      color: var(--muted);
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .form-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input, textarea, select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0.5rem;
+      padding: 0.7rem 1rem;
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(233,69,96,0.15);
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    select option { background: #1a1a2e; }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 0.5rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: 'Boogaloo', cursive;
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(233,69,96,0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(233,69,96,0.5); }
+
+    /* ── SUCCESS PAGE ── */
+    #page-success {
+      text-align: center;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 50% 40%, rgba(233,69,96,0.15) 0%, transparent 65%);
+    }
+    #page-success .big { font-size: 5rem; margin-bottom: 1rem; }
+    #page-success h2 {
+      font-family: 'Boogaloo', cursive;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      color: #fff;
+      margin-bottom: 0.75rem;
+    }
+    #page-success p { color: var(--muted); max-width: 400px; }
+
+    /* ── NO COUNTER ── */
+    .no-count {
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      min-height: 1.2em;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    footer span { color: var(--accent); }
+  </style>
+</head>
+<body class="lang-fr">
+
+<!-- Lang toggle -->
+<div class="lang-toggle">
+  <button class="lang-btn active" onclick="setLang('fr')">FR</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- ── PAGE 1: ASK ── -->
+<div class="page active" id="page-ask">
+  <div class="ask-tag">🎮 <span data-lang="fr">Nouvelle quête</span><span data-lang="en">New quest</span></div>
+  <h1>
+    <span data-lang="fr">Tu veux aller<br>sur un <span>date</span> avec moi ?</span>
+    <span data-lang="en">Wanna go on a<br><span>date</span> with me?</span>
+  </h1>
+  <p class="ask-sub">
+    <span data-lang="fr">Choisis soigneusement.</span>
+    <span data-lang="en">Choose wisely.</span>
+  </p>
+
+  <div class="btn-row">
+    <button class="btn-yes" onclick="showForm()">
+      <span data-lang="fr">💖 Oui !</span>
+      <span data-lang="en">💖 Yes!</span>
+    </button>
+    <button class="btn-no" id="btn-no"
+      onmouseover="escapeBtn(event)"
+      ontouchstart="escapeBtn(event)">
+      <span data-lang="fr">Non</span>
+      <span data-lang="en">No</span>
+    </button>
+  </div>
+  <div class="no-count" id="no-count"></div>
+</div>
+
+<!-- ── PAGE 2: FORM ── -->
+<div class="page" id="page-form">
+  <div class="inner">
+    <div class="section-label">// <span data-lang="fr">Planification</span><span data-lang="en">Planning</span></div>
+    <h2><span data-lang="fr">Super choix. 🎉</span><span data-lang="en">Great choice. 🎉</span></h2>
+    <p class="sub">
+      <span data-lang="fr">Remplis les détails et on s'organise !</span>
+      <span data-lang="en">Fill in the details and let's make it happen!</span>
+    </p>
+
+    <div class="form-box">
+      <div class="field">
+        <label id="lbl-name"><span data-lang="fr">Ton prénom</span><span data-lang="en">Your name</span></label>
+        <input id="f-name" type="text" required />
+      </div>
+      <div class="field">
+        <label id="lbl-contact"><span data-lang="fr">Comment te rejoindre ? (Instagram, téléphone…)</span><span data-lang="en">How to reach you? (Instagram, phone…)</span></label>
+        <input id="f-contact" type="text" required />
+      </div>
+      <div class="field">
+        <label id="lbl-date"><span data-lang="fr">Quand t'es dispo ?</span><span data-lang="en">When are you free?</span></label>
+        <input id="f-date" type="text" placeholder="ex: samedi soir, n'importe quand en soirée…" />
+      </div>
+      <div class="field">
+        <label id="lbl-activity"><span data-lang="fr">T'as une activité en tête ?</span><span data-lang="en">Any activity in mind?</span></label>
+        <input id="f-activity" type="text" placeholder="ex: resto, parc, jeux de société…" />
+      </div>
+      <div class="field">
+        <label id="lbl-lift"><span data-lang="fr">T'as besoin d'un lift ?</span><span data-lang="en">Do you need a ride?</span></label>
+        <select id="f-lift">
+          <option value="" data-fr="— Choisis —" data-en="— Pick one —">— Choisis —</option>
+          <option value="Oui" data-fr="Oui, merci !" data-en="Yes please!">Oui, merci !</option>
+          <option value="Non" data-fr="Non, j'ai un char" data-en="No, I've got a ride">Non, j'ai un char</option>
+          <option value="Peut-être" data-fr="Peut-être, à confirmer" data-en="Maybe, TBD">Peut-être, à confirmer</option>
+        </select>
+      </div>
+      <div class="field">
+        <label id="lbl-other"><span data-lang="fr">Autre chose à ajouter ?</span><span data-lang="en">Anything else?</span></label>
+        <textarea id="f-other" placeholder="ex: allergies, préférences, idées folles…"></textarea>
+      </div>
+      <button type="button" class="submit-btn" onclick="submitForm()">
+        <span data-lang="fr">▶ Envoyer</span>
+        <span data-lang="en">▶ Send</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE 3: SUCCESS ── -->
+<div class="page" id="page-success">
+  <div class="big">🎮💖</div>
+  <h2><span data-lang="fr">Ça va être génial !</span><span data-lang="en">This is gonna be awesome!</span></h2>
+  <p><span data-lang="fr">Je reviens vers toi très vite pour confirmer les détails. Hâte ! ✨</span><span data-lang="en">I'll get back to you soon to confirm the details. Can't wait! ✨</span></p>
+</div>
+
+<footer>
+  <span data-lang="fr">Fait avec <span>♥</span> · Citrouille approuvé 🐱</span>
+  <span data-lang="en">Made with <span>♥</span> · Citrouille approved 🐱</span>
+</footer>
+
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdEeup2BOxypjRT9zMCnhYApYiapu-oNS21XaJd5EfceFVDECdcn7Gy3hws0u-CJ-x/exec';
+  let noCount = 0;
+  let currentLang = 'fr';
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.body.className = 'lang-' + lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === lang));
+
+    // Update select options
+    const select = document.getElementById('f-lift');
+    [...select.options].forEach(o => {
+      const t = o.getAttribute('data-' + lang);
+      if (t) o.text = t;
+    });
+
+    // Update placeholders
+    if (lang === 'fr') {
+      document.getElementById('f-date').placeholder = 'ex: samedi soir, n\'importe quand en soirée…';
+      document.getElementById('f-activity').placeholder = 'ex: resto, parc, jeux de société…';
+      document.getElementById('f-other').placeholder = 'ex: allergies, préférences, idées folles…';
+    } else {
+      document.getElementById('f-date').placeholder = 'e.g. Saturday evening, any weeknight…';
+      document.getElementById('f-activity').placeholder = 'e.g. restaurant, park, board games…';
+      document.getElementById('f-other').placeholder = 'e.g. allergies, preferences, wild ideas…';
+    }
+  }
+
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function showForm() {
+    // Spawn hearts
+    for (let i = 0; i < 8; i++) {
+      setTimeout(() => spawnHeart(window.innerWidth / 2, window.innerHeight / 2), i * 80);
+    }
+    setTimeout(() => showPage('page-form'), 400);
+  }
+
+  function escapeBtn(e) {
+    noCount++;
+    const btn = document.getElementById('btn-no');
+    const row = btn.parentElement;
+    const rowRect = row.getBoundingClientRect();
+    const btnW = btn.offsetWidth;
+    const btnH = btn.offsetHeight;
+
+    // Shrink the button slightly each time
+    const currentSize = parseFloat(btn.style.fontSize) || 1.5;
+    btn.style.fontSize = Math.max(0.6, currentSize - 0.07) + 'rem';
+
+    // Random position within viewport, avoiding the yes button
+    const maxX = window.innerWidth - btnW - 20;
+    const maxY = window.innerHeight - btnH - 20;
+    const newX = Math.random() * maxX + 10;
+    const newY = Math.random() * maxY + 10;
+
+    btn.style.position = 'fixed';
+    btn.style.left = newX + 'px';
+    btn.style.top = newY + 'px';
+    btn.style.zIndex = 50;
+
+    // Spawn heart at cursor/touch position
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    spawnHeart(x, y);
+
+    // Update counter
+    const counter = document.getElementById('no-count');
+    const msgs = {
+      fr: ['', 'Hm...', 'T\'es sûre ?', 'Vraiment ?', 'Reconsidère ça...', 'Le bouton fuit 😅', 'Tu peux pas cliquer dessus 😈', 'Indice : clique sur Oui !', '...', 'Ok je vais juste attendre 🐱'],
+      en: ['', 'Hmm...', 'You sure?', 'Really?', 'Reconsider...', 'The button is running 😅', "You can't click it 😈", 'Hint: click Yes!', '...', "I'll just wait here 🐱"]
+    };
+    const list = msgs[currentLang];
+    counter.textContent = list[Math.min(noCount, list.length - 1)];
+  }
+
+  function spawnHeart(x, y) {
+    const h = document.createElement('div');
+    h.className = 'heart';
+    h.textContent = ['💖','💕','❤️','✨','🎮'][Math.floor(Math.random() * 5)];
+    h.style.left = (x - 12) + 'px';
+    h.style.top = (y - 12) + 'px';
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 1000);
+  }
+
+  async function submitForm() {
+    const name = document.getElementById('f-name').value.trim();
+    const contact = document.getElementById('f-contact').value.trim();
+    if (!name || !contact) {
+      alert(currentLang === 'fr' ? 'Faut au moins ton prénom et comment te rejoindre 😊' : 'Need at least your name and how to reach you 😊');
+      return;
+    }
+
+    const payload = {
+      _sheet: 'Dates',
+      'Prénom': name,
+      'Contact': contact,
+      'Date': document.getElementById('f-date').value,
+      'Activité': document.getElementById('f-activity').value,
+      'Lift': document.getElementById('f-lift').value,
+      'Autre': document.getElementById('f-other').value
+    };
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch(err) {}
+
+    showPage('page-success');
+  }
+
+  // Init
+  setLang('fr');
+</script>
+</body>
+</html>
